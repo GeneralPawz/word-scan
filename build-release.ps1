@@ -62,9 +62,22 @@ Write-Host "==> Built $setup" -ForegroundColor Green
 
 if ($Publish) {
     Write-Host "==> Publishing release v$Version" -ForegroundColor Cyan
-    git tag -a "v$Version" -m "v$Version"
-    git push origin "v$Version"
-    gh release create "v$Version" $setup --title "v$Version" --generate-notes
+
+    # git and gh write progress to stderr, which Windows PowerShell turns into error records
+    # under $ErrorActionPreference='Stop'. Check the exit code explicitly instead.
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        git tag -a "v$Version" -m "v$Version" 2>&1 | Write-Host
+        git push origin "v$Version" 2>&1 | Write-Host
+        if ($LASTEXITCODE -ne 0) { throw "git push of tag v$Version failed." }
+
+        gh release create "v$Version" $setup --title "v$Version" --generate-notes 2>&1 | Write-Host
+        if ($LASTEXITCODE -ne 0) { throw "gh release create failed." }
+    } finally {
+        $ErrorActionPreference = $prev
+    }
+
     Write-Host "==> Published v$Version" -ForegroundColor Green
 } else {
     Write-Host "Run again with -Publish to tag and upload this build." -ForegroundColor Yellow
