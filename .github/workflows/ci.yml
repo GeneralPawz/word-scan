@@ -1,5 +1,8 @@
 name: CI
 
+# The add-in itself is not built here on purpose: it references Microsoft's Extensibility.dll
+# and office.dll, which ship with Office and are not present on GitHub runners. Releases are
+# built locally with build-release.ps1 — see CONTRIBUTING.md.
 on:
   push:
     branches: [main]
@@ -7,12 +10,6 @@ on:
     branches: [main]
 
 jobs:
-  addin:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: dotnet build com-addin/WordScanAddin.csproj -c Release
-
   installer:
     runs-on: windows-latest
     steps:

@@ -40,25 +40,27 @@ The add-in writes a log to `%TEMP%\word-scan-addin.log` covering construction, `
 `GetCustomUI`, and any icon failure. That log is the fastest way to tell "Word never loaded it"
 from "it loaded and then threw" — Word itself reports both as the same generic runtime error.
 
-## Building the installer
+## Releasing
 
-Needs [Inno Setup 6](https://jrsoftware.org/isdl.php):
+Releases are built locally rather than in CI, because `Extensibility.dll` and `office.dll` ship
+with Office and aren't available on GitHub's runners (and aren't on NuGet either).
 
+Needs [Inno Setup 6](https://jrsoftware.org/isdl.php), Office, and — to publish — an
+authenticated `gh`. Close Word first; it locks the DLL.
+
+```powershell
+.\build-release.ps1 -Version 0.3.0            # build only, output in dist\
+.\build-release.ps1 -Version 0.3.0 -Publish   # also tag and upload to GitHub
 ```
-mkdir installer\input
-copy com-addin\bin\Release\net48\WordScanAddin.dll installer\input\
-ISCC installer\word-scan.iss /DMyAppVersion=0.3.0
-```
 
-CI compiles the installer on every push with a placeholder payload, so script errors surface
-without needing a full build.
+CI still compiles the installer on every push using a placeholder payload, so `.iss` errors
+surface without a full build.
 
 ## Pull requests
 
-- Run `dotnet build` before opening a PR; CI runs it plus the installer compile.
-- This project follows [Semantic Versioning](https://semver.org/). Releases are cut by pushing a
-  `vMAJOR.MINOR.PATCH` tag — see [`.github/workflows/release.yml`](.github/workflows/release.yml).
-  You don't need to bump version numbers in a PR; that happens at release time.
+- Run `dotnet build` before opening a PR.
+- This project follows [Semantic Versioning](https://semver.org/). You don't need to bump version
+  numbers in a PR; the version is passed to `build-release.ps1` at release time.
 
 ## Reporting a bug
 

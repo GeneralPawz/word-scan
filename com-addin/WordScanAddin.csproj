@@ -20,16 +20,20 @@
     <Reference Include="System.Drawing" />
     <Reference Include="Microsoft.CSharp" />
     <!-- Official interop assemblies: Extensibility supplies IDTExtensibility2 and office
-         supplies IRibbonExtensibility, so the COM interfaces Word queries for are the real
-         ones rather than hand-declared look-alikes. -->
+         supplies IRibbonExtensibility. These must be the real ones — hand-declared look-alikes
+         marked [ComImport] are left out of the COM wrapper's QueryInterface table, so Word
+         constructs the add-in but never calls OnConnection.
+
+         Both ship with Office/Windows rather than NuGet, which is why releases are built
+         locally (see build-release.ps1) instead of on a CI runner without Office. -->
     <Reference Include="Extensibility">
-      <HintPath>C:\Windows\assembly\GAC\Extensibility\7.0.3300.0__b03f5f7f11d50a3a\extensibility.dll</HintPath>
-      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <HintPath Condition="Exists('$(ExtensibilityPath)')">$(ExtensibilityPath)</HintPath>
+      <HintPath>$(WINDIR)\assembly\GAC\Extensibility\7.0.3300.0__b03f5f7f11d50a3a\extensibility.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="office">
-      <HintPath>C:\Windows\assembly\GAC_MSIL\office\15.0.0.0__71e9bce111e9429c\office.dll</HintPath>
-      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <HintPath Condition="Exists('$(OfficePiaPath)')">$(OfficePiaPath)</HintPath>
+      <HintPath>$(WINDIR)\assembly\GAC_MSIL\office\15.0.0.0__71e9bce111e9429c\office.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
