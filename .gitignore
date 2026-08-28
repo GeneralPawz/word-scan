@@ -1,0 +1,6 @@
+# .NET
+helper/bin/
+helper/obj/
+
+# Node
+addin/node_modules/

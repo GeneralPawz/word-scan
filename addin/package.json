@@ -1,0 +1,20 @@
+{
+  "name": "addin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "sideload": "office-addin-debugging start manifest.xml",
+    "validate": "office-addin-manifest validate manifest.xml"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "express": "^5.2.1",
+    "office-addin-debugging": "^6.1.2",
+    "office-addin-dev-certs": "^2.0.10",
+    "office-addin-manifest": "^2.1.6"
+  }
+}
