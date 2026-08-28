@@ -1,74 +1,87 @@
-# Word Scan
+# <img src="assets/icon-128.png" width="28" align="top" alt=""> Word Scan
 
-A Word add-in that lets you scan a document directly from your system scanner and insert
-the image at your cursor position, without leaving Word.
+🇩🇪 Deutsch (diese Seite) · 🇬🇧 [English](README.en.md)
 
-Two components:
+[![Neueste Version](https://img.shields.io/github/v/release/GeneralPawz/word-scan?style=flat-square&logo=github&label=release)](https://github.com/GeneralPawz/word-scan/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/GeneralPawz/word-scan/total?style=flat-square&label=downloads)](https://github.com/GeneralPawz/word-scan/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/GeneralPawz/word-scan/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/GeneralPawz/word-scan/actions/workflows/ci.yml)
+[![Lizenz MIT](https://img.shields.io/badge/lizenz-MIT-blue?style=flat-square)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-%E2%99%A5-ff69b4?style=flat-square&logo=githubsponsors)](https://github.com/sponsors/GeneralPawz)
 
-- **`helper/`** — a small local ASP.NET Core service (`ScanHelper`) that talks to your
-  scanner via the Windows Image Acquisition (WIA) API and exposes it over
-  `http://127.0.0.1:7643`, loopback-only.
-- **`addin/`** — the Word task pane add-in (HTML/CSS/JS via Office.js). Its "Scan" button
-  calls the helper, then inserts the returned image as an inline picture at your last
-  cursor position in the document.
+Scannt ein Dokument mit eurem Scanner und fügt das Bild direkt in Word ein — genau dort, wo der
+Cursor gerade steht. Keine separate Scan-App, kein Zwischenspeichern, kein "Grafik einfügen"-Dialog.
 
-## Prerequisites
+> [!NOTE]
+> Diese README ist standardmäßig auf Deutsch. GitHub kann Dateien nicht automatisch je nach
+> Browsersprache anzeigen — dafür gibt's oben den Link zur [englischen Version](README.en.md).
 
-- Windows, with a scanner installed and working via Windows' built-in scanner support (WIA)
-- [.NET SDK 8](https://dotnet.microsoft.com/download) or later
-- [Node.js](https://nodejs.org/) 18+
-- Desktop Word (Microsoft 365 or Word 2016+)
+## Installation 🚀
 
-## Running it
+Ihr braucht **zwei Dateien** von der [neuesten Version](https://github.com/GeneralPawz/word-scan/releases/latest):
 
-1. **Start the scan helper** (keep this running in the background whenever you want to scan):
+1. **Den Scan-Helfer** — `word-scan-helper-<version>-win-x64.exe`. Er spricht mit eurem Scanner.
+   Speichert ihn irgendwo ab (z. B. `Dokumente\WordScan\`) und startet ihn per Doppelklick, sobald
+   ihr scannen wollt; dabei bleibt ein Konsolenfenster geöffnet.
+2. **Das Add-in** — `word-scan-manifest.xml`. In Word: Reiter **Einfügen** → **Add-Ins** →
+   **Meine Add-Ins** → **Eigenes Add-In hochladen** → die heruntergeladene `word-scan-manifest.xml`
+   auswählen. Ab dann erscheint in jedem Dokument ein **Scan**-Button im Reiter **Start**.
 
-   ```
-   cd helper
-   dotnet run
-   ```
+> [!IMPORTANT]
+> Der Helfer muss laufen, damit der Scan-Button funktioniert. Passiert beim Klick nichts, prüft,
+> ob sein Konsolenfenster noch offen ist.
 
-   Verify it's up: `curl http://127.0.0.1:7643/health` should return `{"status":"ok"}`.
+> [!WARNING]
+> Windows SmartScreen warnt eventuell vor der Helfer-`.exe`, weil sie nicht signiert ist (Code-
+> Signing kostet Geld, das dieses Hobbyprojekt nicht ausgibt). Klickt auf **Weitere Informationen
+> → Trotzdem ausführen**. Der Quellcode liegt vollständig offen in diesem Repository — oder baut
+> euch den Helfer einfach selbst, siehe [Selbst bauen](#selbst-bauen-️).
 
-2. **Install the add-in's dev dependencies and trusted local HTTPS cert** (first time only):
+> [!NOTE]
+> Euer Scanner muss bereits mit der in Windows eingebauten Scan-Funktion zusammenarbeiten (dieselbe,
+> die **Windows-Fax und -Scan** oder die Fotos-App nutzt). Sieht die euren Scanner nicht, sieht ihn
+> dieses Add-in auch nicht.
 
-   ```
-   cd addin
-   npm install
-   npx office-addin-dev-certs install
-   ```
+## Benutzung 🖨️
 
-3. **Start the add-in's dev server**:
+1. Klickt im Dokument an die Stelle, an die das gescannte Bild soll.
+2. Öffnet den **Scan**-Taskbereich (Reiter Start) und klickt auf **Scan**.
+3. Der Scan-Dialog eures Systems öffnet sich — wählt bei Bedarf Gerät/Einstellungen.
+4. Das gescannte Bild landet genau dort, wo euer Cursor stand — ein Klick in den Taskbereich
+   verschiebt ihn nicht.
 
-   ```
-   npm start
-   ```
+## Selbst bauen 🛠️
 
-   This serves the task pane at `https://localhost:3000`.
+Für Mitwirkende, oder wenn ihr den Helfer lieber selbst bauen statt der Release-Binary vertrauen
+wollt — das komplette Dev-Setup (benötigt `.NET 8 SDK` + `Node.js`) steht in
+[CONTRIBUTING.md](CONTRIBUTING.md) (auf Englisch).
 
-4. **Sideload the add-in into Word**:
+## Voraussetzungen 📋
 
-   ```
-   npm run sideload
-   ```
+- Windows, mit einem Scanner, der bereits über die eingebaute Windows-Scan-Unterstützung (WIA)
+  funktioniert
+- Word als Desktop-Anwendung (Microsoft 365 oder Word 2016+)
 
-   This opens Word and loads the add-in from `manifest.xml`. A "Scan" button appears
-   on the Home ribbon tab.
+## Wie es zusammenspielt 🔍
 
-## Using it
+- Das Add-in selbst (HTML/CSS/JS) liegt auf GitHub Pages — es muss außer der Manifest-Datei nichts
+  installiert werden.
+- Da im Browser-Sandkasten laufende Add-ins nicht direkt mit Scanner-Hardware sprechen können,
+  übernimmt ein kleiner lokaler Helfer-Dienst (.NET, eigenständig, keine separate Runtime nötig)
+  das eigentliche WIA-Scannen und gibt das Bild ausschließlich über `127.0.0.1` zurück — von
+  außerhalb eures Rechners ist er nie erreichbar.
 
-1. Click into your document where you want the scanned image to go.
-2. Open the Scan task pane and click **Scan**.
-3. Your system's scan dialog opens — pick a device/settings if prompted.
-4. The scanned image is inserted inline at the cursor position you had before opening
-   the task pane (clicking into the task pane doesn't move your document cursor).
+## Einschränkungen 📎
 
-## Notes / limitations
+- Nur Word als Desktop-Anwendung unter Windows — WIA und der lokale Helfer sind Windows-spezifisch.
+- Der Helfer ist nicht code-signiert; siehe die SmartScreen-Warnung oben.
 
-- Desktop Windows Word only (WIA and the local helper are Windows-specific).
-- The helper binds to `127.0.0.1` only and only accepts requests from the add-in's
-  dev origin (`https://localhost:3000`) via CORS — it isn't reachable from other
-  machines or arbitrary web pages.
-- For production distribution, replace `manifest.xml`'s `localhost:3000` URLs with a
-  real hosted origin, and package/install the helper as a startup service instead of
-  running it manually via `dotnet run`.
+## Unterstützung 💸
+
+Word Scan ist kostenlos und bleibt es auch. Wenn es euch den Weg zu einer Scan-App erspart hat und
+ihr etwas zurückgeben möchtet, ist [Sponsoring willkommen](https://github.com/sponsors/GeneralPawz)
+— völlig freiwillig. Bug-Reports und Pull Requests sind genauso viel wert — siehe
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Lizenz
+
+[MIT](LICENSE) © Friedrich Schrödter

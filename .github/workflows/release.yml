@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag
+        id: version
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp version into manifest and package.json
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          sed -i "s#<Version>[0-9.]*</Version>#<Version>${version}.0</Version>#" manifest.production.xml
+          node -e "
+            const fs = require('fs');
+            const p = JSON.parse(fs.readFileSync('addin/package.json'));
+            p.version = '${version}';
+            fs.writeFileSync('addin/package.json', JSON.stringify(p, null, 2) + '\n');
+          "
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish self-contained helper exe
+        run: >
+          dotnet publish helper/ScanHelper.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:Version=${{ steps.version.outputs.version }}
+          -o publish
+
+      - name: Package release assets
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp publish/ScanHelper.exe "dist/word-scan-helper-${{ steps.version.outputs.version }}-win-x64.exe"
+          cp manifest.production.xml "dist/word-scan-manifest.xml"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release create ${{ steps.version.outputs.tag }} dist/*
+          --title "${{ steps.version.outputs.tag }}"
+          --generate-notes

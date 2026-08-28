@@ -1,6 +1,12 @@
 using ScanHelper;
 
-const string AddinOrigin = "https://localhost:3000";
+// Local dev server and the GitHub Pages-hosted production add-in — both need to reach this
+// loopback-only helper from the browser/WebView2 that's rendering the task pane.
+var AddinOrigins = new[]
+{
+    "https://localhost:3000",
+    "https://generalpawz.github.io",
+};
 const string CorsPolicy = "AddinOnly";
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(CorsPolicy, policy =>
-        policy.WithOrigins(AddinOrigin)
+        policy.WithOrigins(AddinOrigins)
               .WithMethods("GET", "POST")
               .AllowAnyHeader());
 });
