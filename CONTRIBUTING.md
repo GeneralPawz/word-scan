@@ -1,44 +1,66 @@
 # Contributing
 
-Thanks for looking at this project. It has two independent pieces, so pick whichever one your
-change touches.
+Thanks for looking at this project.
 
-## `helper/` — the scan service (.NET)
+## Layout
 
-```
-cd helper
-dotnet run
-```
+- `com-addin/` — the add-in itself: a .NET Framework 4.8 COM add-in that Word loads in-process.
+- `installer/` — the Inno Setup script that installs it and writes the per-user registry keys.
+- `scripts/` — dependency-free icon generators (`make-icons.js`, `make-ico.js`).
 
-`curl http://127.0.0.1:7643/health` should return `{"status":"ok"}`. The WIA COM call in
-`WiaScanner.cs` needs a real scanner to test end-to-end; without one, `POST /scan` still exercises
-the whole code path and fails with WIA's own "no device available" error, which is the expected
-result on a machine with no scanner attached.
-
-## `addin/` — the Word task pane (HTML/CSS/JS)
+## Building
 
 ```
-cd addin
-npm install
-npx office-addin-dev-certs install   # first time only, trusted local HTTPS cert
-npm start                            # serves https://localhost:3000
-npm run sideload                     # loads addin/manifest.xml into Word
-npm run validate                     # lints manifest.xml against the Office schema
+dotnet build com-addin/WordScanAddin.csproj
 ```
+
+Requires the .NET SDK plus the .NET Framework 4.8 targeting pack (installed with Visual Studio or
+the standalone Developer Pack). The add-in references `Extensibility.dll` and `office.dll` from the
+GAC — both ship with Office/Windows.
+
+## Testing it in Word
+
+Word loads the add-in from wherever the registry points, so you can register the build output
+directly. Word must be closed for both registration and any rebuild (it locks the DLL).
+
+The installer's `[Registry]` section documents the exact keys involved:
+
+- `HKCU\Software\Classes\CLSID\{A1B2C3D4-...}\InprocServer32` — the managed COM registration
+  (`mscoree.dll` shim, plus `Class`, `Assembly`, `RuntimeVersion`, `CodeBase`)
+- `HKCU\Software\Classes\WordScanAddin.Connect` — the ProgID
+- `HKCU\Software\Microsoft\Office\Word\Addins\WordScanAddin.Connect` — Word's own entry,
+  `LoadBehavior` = 3
+
+Point `CodeBase` at `com-addin\bin\Debug\net48\WordScanAddin.dll` and reopen Word.
+
+> After a failed load, Word sets `LoadBehavior` to `2` so it won't retry. Set it back to `3`
+> before each retest, or the add-in silently stays disabled.
+
+The add-in writes a log to `%TEMP%\word-scan-addin.log` covering construction, `OnConnection`,
+`GetCustomUI`, and any icon failure. That log is the fastest way to tell "Word never loaded it"
+from "it loaded and then threw" — Word itself reports both as the same generic runtime error.
+
+## Building the installer
+
+Needs [Inno Setup 6](https://jrsoftware.org/isdl.php):
+
+```
+mkdir installer\input
+copy com-addin\bin\Release\net48\WordScanAddin.dll installer\input\
+ISCC installer\word-scan.iss /DMyAppVersion=0.3.0
+```
+
+CI compiles the installer on every push with a placeholder payload, so script errors surface
+without needing a full build.
 
 ## Pull requests
 
-- Keep `helper/` and `addin/` changes in separate PRs where practical — they build and release
-  independently.
-- Run `npm run validate` (manifest) and `dotnet build` (helper) before opening a PR; CI runs both
-  on every push.
+- Run `dotnet build` before opening a PR; CI runs it plus the installer compile.
 - This project follows [Semantic Versioning](https://semver.org/). Releases are cut by pushing a
-  `vMAJOR.MINOR.PATCH` tag — see [`.github/workflows/release.yml`](.github/workflows/release.yml)
-  for what that triggers. You don't need to bump version numbers yourself in a PR; that happens at
-  release time.
+  `vMAJOR.MINOR.PATCH` tag — see [`.github/workflows/release.yml`](.github/workflows/release.yml).
+  You don't need to bump version numbers in a PR; that happens at release time.
 
 ## Reporting a bug
 
-Open an issue with your Windows version, Word version/build, and — if it's scan-related — the
-scanner make/model and whatever the helper printed to its console. That console output is the
-fastest way to tell a WIA problem from an add-in problem.
+Open an issue with your Windows version, Word version/build, the scanner make/model, and the
+contents of `%TEMP%\word-scan-addin.log`.

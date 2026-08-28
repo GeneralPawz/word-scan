@@ -17,79 +17,65 @@ Cursor gerade steht. Keine separate Scan-App, kein Zwischenspeichern, kein "Graf
 
 ## Installation 🚀
 
-Ladet `word-scan-setup-<version>.exe` von der [neuesten Version](https://github.com/GeneralPawz/word-scan/releases/latest)
-herunter und führt es aus. Das Setup
+**Word schließen**, dann `word-scan-setup-<version>.exe` von der
+[neuesten Version](https://github.com/GeneralPawz/word-scan/releases/latest) herunterladen und
+ausführen. Das Setup installiert alles und trägt das Add-In bei Word ein — kein Trust-Center, kein
+Zertifikat, keine Administratorrechte nötig.
 
-- installiert den Scan-Helfer (spricht mit eurem Scanner) unter `%LocalAppData%\Programs\WordScan`,
-- trägt das Add-in bei Word automatisch ein — kein Trust-Center, kein Zertifikat, kein
-  "Eigenes Add-In hochladen"-Dialog nötig,
-- legt eine Verknüpfung im Startmenü an, optional auch im Autostart.
-
-Danach nur noch **Word komplett schließen und neu öffnen** — im Reiter **Start** erscheint ein
-**Scan**-Button.
+Danach Word öffnen: im Reiter **Start** erscheint ein **Scan**-Button. Das war's.
 
 > [!IMPORTANT]
-> Der Helfer muss laufen, damit der Scan-Button funktioniert (das Setup startet ihn direkt; ohne
-> Autostart-Option müsst ihr ihn danach über die Startmenü-Verknüpfung erneut öffnen). Passiert
-> beim Klick nichts, prüft, ob sein Konsolenfenster noch offen ist.
+> Word muss beim Installieren geschlossen sein — es hält sonst die Add-In-Datei gesperrt.
 
 > [!WARNING]
-> Windows SmartScreen warnt eventuell vor dem Setup bzw. der Helfer-`.exe`, weil beide nicht
-> signiert sind (Code-Signing kostet Geld, das dieses Hobbyprojekt nicht ausgibt). Klickt auf
-> **Weitere Informationen → Trotzdem ausführen**. Der Quellcode liegt vollständig offen in diesem
-> Repository — oder baut euch alles selbst, siehe [Selbst bauen](#selbst-bauen-️).
+> Windows SmartScreen warnt eventuell vor dem Setup, weil es nicht signiert ist (Code-Signing
+> kostet Geld, das dieses Hobbyprojekt nicht ausgibt). Klickt auf **Weitere Informationen →
+> Trotzdem ausführen**. Der Quellcode liegt vollständig offen in diesem Repository — oder baut
+> euch alles selbst, siehe [Selbst bauen](#selbst-bauen-️).
 
 > [!NOTE]
 > Euer Scanner muss bereits mit der in Windows eingebauten Scan-Funktion zusammenarbeiten (dieselbe,
 > die **Windows-Fax und -Scan** oder die Fotos-App nutzt). Sieht die euren Scanner nicht, sieht ihn
 > dieses Add-in auch nicht.
 
-<details>
-<summary>Manuelle Installation ohne Setup (fortgeschritten)</summary>
-
-Alternativ liegen `word-scan-helper-<version>-win-x64.exe` und `word-scan-manifest.xml` einzeln im
-selben Release. Startet die `.exe` manuell und tragt den Sideload-Registry-Schlüssel selbst ein
-(`HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\WEF\Developer`, Wertname
-`e667ed5b-c1c6-4f76-a374-a3a71521431d`, Wert = Pfad zur `word-scan-manifest.xml`) — genau das, was
-das Setup automatisch macht. Der Weg über Word selbst (Reiter **Datei** → **Optionen** (ganz unten)
-→ **Add-Ins** → unten im Dropdown **Meine Add-Ins** wählen → **Eigenes Add-In hochladen**) funktioniert
-nur mit einem Microsoft-365-Konto zuverlässig und meldet sonst gerne Schema- oder Zertifikatsfehler.
-
-</details>
-
 ## Benutzung 🖨️
 
 1. Klickt im Dokument an die Stelle, an die das gescannte Bild soll.
-2. Öffnet den **Scan**-Taskbereich (Reiter Start) und klickt auf **Scan**.
+2. Klickt im Reiter **Start** auf **Scan**.
 3. Der Scan-Dialog eures Systems öffnet sich — wählt bei Bedarf Gerät/Einstellungen.
-4. Das gescannte Bild landet genau dort, wo euer Cursor stand — ein Klick in den Taskbereich
-   verschiebt ihn nicht.
+4. Das gescannte Bild landet genau dort, wo euer Cursor stand.
 
 ## Selbst bauen 🛠️
 
-Für Mitwirkende, oder wenn ihr den Helfer lieber selbst bauen statt der Release-Binary vertrauen
-wollt — das komplette Dev-Setup (benötigt `.NET 8 SDK` + `Node.js`) steht in
-[CONTRIBUTING.md](CONTRIBUTING.md) (auf Englisch).
+Für Mitwirkende, oder wenn ihr dem Release-Build lieber nicht vertrauen wollt — das komplette
+Dev-Setup (benötigt nur das `.NET SDK`) steht in [CONTRIBUTING.md](CONTRIBUTING.md) (auf Englisch).
 
 ## Voraussetzungen 📋
 
 - Windows, mit einem Scanner, der bereits über die eingebaute Windows-Scan-Unterstützung (WIA)
   funktioniert
 - Word als Desktop-Anwendung (Microsoft 365 oder Word 2016+)
+- .NET Framework 4.8 (auf aktuellen Windows-Installationen bereits vorhanden)
 
-## Wie es zusammenspielt 🔍
+## Wie es funktioniert 🔍
 
-- Das Add-in selbst (HTML/CSS/JS) liegt auf GitHub Pages — es muss außer der Manifest-Datei nichts
-  installiert werden.
-- Da im Browser-Sandkasten laufende Add-ins nicht direkt mit Scanner-Hardware sprechen können,
-  übernimmt ein kleiner lokaler Helfer-Dienst (.NET, eigenständig, keine separate Runtime nötig)
-  das eigentliche WIA-Scannen und gibt das Bild ausschließlich über `127.0.0.1` zurück — von
-  außerhalb eures Rechners ist er nie erreichbar.
+Word Scan ist ein klassisches COM-Add-In (.NET Framework), das direkt in Word läuft. Der
+Scan-Button ruft Windows Image Acquisition (WIA) auf und fügt das Ergebnis über Words eigenes
+Objektmodell an der Cursorposition ein — alles in einem Prozess, ohne Hintergrunddienst,
+lokalen Server oder Netzwerkzugriff.
+
+Die Registrierung erfolgt vollständig benutzerbezogen unter `HKEY_CURRENT_USER`, weshalb das
+Setup ohne Administratorrechte auskommt.
+
+> [!NOTE]
+> Der ursprüngliche Ansatz war ein modernes Office.js-Add-In. Der ließ sich auf Rechnern mit
+> Unternehmens-Identität (Azure AD Workplace Join) nicht installieren — das Hochladen eigener
+> Add-Ins ist dort gesperrt. Klassische COM-Add-Ins sind davon nicht betroffen.
 
 ## Einschränkungen 📎
 
-- Nur Word als Desktop-Anwendung unter Windows — WIA und der lokale Helfer sind Windows-spezifisch.
-- Der Helfer ist nicht code-signiert; siehe die SmartScreen-Warnung oben.
+- Nur Word als Desktop-Anwendung unter Windows — WIA und COM-Add-Ins sind Windows-spezifisch.
+- Das Setup ist nicht code-signiert; siehe die SmartScreen-Warnung oben.
 
 ## Unterstützung 💸
 

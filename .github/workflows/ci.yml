@@ -7,37 +7,21 @@ on:
     branches: [main]
 
 jobs:
-  helper:
+  addin:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
-      - run: dotnet build helper/ScanHelper.csproj
-
-  addin:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - run: npm ci
-        working-directory: addin
-      - run: npm run validate
-        working-directory: addin
+      - run: dotnet build com-addin/WordScanAddin.csproj -c Release
 
   installer:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile installer with placeholder inputs
+      - name: Compile installer with a placeholder payload
         shell: bash
         run: |
           mkdir -p installer/input
-          echo "placeholder" > installer/input/ScanHelper.exe
-          cp manifest.production.xml installer/input/manifest.xml
+          echo "placeholder" > installer/input/WordScanAddin.dll
           ISCC="$(where.exe ISCC.exe 2>/dev/null | head -n1 || true)"
           if [ -z "$ISCC" ]; then
             choco install innosetup -y --no-progress

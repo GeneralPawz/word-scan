@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>WordScanAddin</AssemblyName>
+    <RootNamespace>WordScanAddin</RootNamespace>
+    <!-- AnyCPU so the same DLL loads into both 32-bit and 64-bit Word; the installer
+         registers it with both the 32-bit and 64-bit regasm for that reason. -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <ComVisible>false</ComVisible>
+    <Guid>3f6f9d2a-6e8b-4b7a-9a1e-5b2c7d4e9f10</Guid>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="Microsoft.CSharp" />
+    <!-- Official interop assemblies: Extensibility supplies IDTExtensibility2 and office
+         supplies IRibbonExtensibility, so the COM interfaces Word queries for are the real
+         ones rather than hand-declared look-alikes. -->
+    <Reference Include="Extensibility">
+      <HintPath>C:\Windows\assembly\GAC\Extensibility\7.0.3300.0__b03f5f7f11d50a3a\extensibility.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="office">
+      <HintPath>C:\Windows\assembly\GAC_MSIL\office\15.0.0.0__71e9bce111e9429c\office.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="icon-32.png">
+      <LogicalName>WordScanAddin.icon-32.png</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

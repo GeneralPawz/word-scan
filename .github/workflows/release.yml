@@ -19,46 +19,20 @@ jobs:
         shell: bash
         run: |
           tag="${GITHUB_REF_NAME}"
-          version="${tag#v}"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      - name: Stamp version into manifest and package.json
-        shell: bash
-        run: |
-          version="${{ steps.version.outputs.version }}"
-          sed -i "s#<Version>[0-9.]*</Version>#<Version>${version}.0</Version>#" manifest.production.xml
-          node -e "
-            const fs = require('fs');
-            const p = JSON.parse(fs.readFileSync('addin/package.json'));
-            p.version = '${version}';
-            fs.writeFileSync('addin/package.json', JSON.stringify(p, null, 2) + '\n');
-          "
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
-
-      - name: Publish self-contained helper exe
+      - name: Build add-in
         run: >
-          dotnet publish helper/ScanHelper.csproj -c Release -r win-x64 --self-contained true
-          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          dotnet build com-addin/WordScanAddin.csproj -c Release
           -p:Version=${{ steps.version.outputs.version }}
           -o publish
-
-      - name: Package release assets
-        shell: bash
-        run: |
-          mkdir -p dist
-          cp publish/ScanHelper.exe "dist/word-scan-helper-${{ steps.version.outputs.version }}-win-x64.exe"
-          cp manifest.production.xml "dist/word-scan-manifest.xml"
 
       - name: Build installer
         shell: bash
         run: |
           mkdir -p installer/input
-          cp publish/ScanHelper.exe installer/input/ScanHelper.exe
-          cp manifest.production.xml installer/input/manifest.xml
+          cp publish/WordScanAddin.dll installer/input/WordScanAddin.dll
           ISCC="$(where.exe ISCC.exe 2>/dev/null | head -n1 || true)"
           if [ -z "$ISCC" ]; then
             choco install innosetup -y --no-progress
