@@ -64,7 +64,7 @@ jobs:
             choco install innosetup -y --no-progress
             ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
           fi
-          "$ISCC" installer/word-scan.iss "/DMyAppVersion=${{ steps.version.outputs.version }}"
+          "$ISCC" installer/word-scan.iss "//DMyAppVersion=${{ steps.version.outputs.version }}"
 
       - name: Create GitHub release
         env:
