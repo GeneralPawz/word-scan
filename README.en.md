@@ -45,8 +45,9 @@ Then just **fully close and reopen Word** — a **Scan** button appears on the *
 individually in the same release. Run the `.exe` yourself and add the sideload registry key the
 installer would otherwise set for you (`HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\WEF\Developer`,
 value name `e667ed5b-c1c6-4f76-a374-a3a71521431d`, value = path to `word-scan-manifest.xml`).
-**Upload My Add-in** only reliably works with a Microsoft 365 account and otherwise tends to report
-schema or certificate errors instead.
+Doing it through Word itself (**File** tab → **Options** (at the bottom) → **Add-ins** → pick
+**My Add-ins** from the dropdown at the bottom → **Upload My Add-in**) only reliably works with a
+Microsoft 365 account and otherwise tends to report schema or certificate errors instead.
 
 </details>
 
