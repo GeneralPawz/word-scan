@@ -22,7 +22,7 @@ Ihr braucht **zwei Dateien** von der [neuesten Version](https://github.com/Gener
 1. **Den Scan-Helfer** — `word-scan-helper-<version>-win-x64.exe`. Er spricht mit eurem Scanner.
    Speichert ihn irgendwo ab (z. B. `Dokumente\WordScan\`) und startet ihn per Doppelklick, sobald
    ihr scannen wollt; dabei bleibt ein Konsolenfenster geöffnet.
-2. **Das Add-in** — `word-scan-manifest.xml`. In Word: Reiter **Einfügen** → **Add-Ins** →
+2. **Das Add-in** — `word-scan-manifest.xml`. In Word: Reiter **Datei** → **Opionen (ganz unten)** → **Add-Ins** →
    **Meine Add-Ins** → **Eigenes Add-In hochladen** → die heruntergeladene `word-scan-manifest.xml`
    auswählen. Ab dann erscheint in jedem Dokument ein **Scan**-Button im Reiter **Start**.
 
