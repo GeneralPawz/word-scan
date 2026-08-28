@@ -34,6 +34,10 @@ DefaultGroupName=Word Scan
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
+; Install in 64-bit mode so the COM registration lands in the real HKCU\Software\Classes\CLSID.
+; Without this the installer runs 32-bit and WOW64 silently redirects those writes into
+; Wow6432Node, where 64-bit Word never looks — the add-in then just never appears.
+ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
 OutputBaseFilename=word-scan-setup-{#MyAppVersion}
 Compression=lzma
@@ -54,6 +58,14 @@ german.WordRunningWarning=Word läuft anscheinend noch. Bitte schließt es, bevo
 
 [Files]
 Source: "input\WordScanAddin.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+[InstallDelete]
+; Leftovers from the pre-0.3 helper-service/Office.js layout.
+Type: filesandordirs; Name: "{app}\catalog"
+Type: files; Name: "{app}\ScanHelper.exe"
+Type: files; Name: "{app}\manifest.xml"
+Type: files; Name: "{group}\Word Scan Helfer.lnk"
+Type: files; Name: "{userstartup}\Word Scan Helfer.lnk"
 
 [Registry]
 ; Per-user COM registration (the equivalent of regasm /codebase, without needing admin).
@@ -85,11 +97,21 @@ Root: HKCU; Subkey: "Software\Microsoft\Office\Word\Addins\{#AddinProgId}"; Valu
 Root: HKCU; Subkey: "Software\Microsoft\Office\Word\Addins\{#AddinProgId}"; ValueType: string; \
   ValueName: "Description"; ValueData: "Scan documents directly into Word"
 
+; Pre-0.3 versions registered an Office.js add-in through these; remove them on upgrade.
+Root: HKCU; Subkey: "Software\Microsoft\Office\16.0\WEF\Developer"; \
+  ValueName: "e667ed5b-c1c6-4f76-a374-a3a71521431d"; ValueType: none; Flags: deletevalue
+Root: HKCU; Subkey: "Software\Microsoft\Office\16.0\WEF\TrustedCatalogs\e667ed5b-c1c6-4f76-a374-a3a71521431d"; \
+  ValueType: none; Flags: deletekey
+
 [Code]
 function InitializeSetup(): Boolean;
 var
   ResultCode: Integer;
 begin
+  // Versions before 0.3 installed a background helper service and could auto-start it at
+  // login. While it runs it locks its own exe, so stop it before [InstallDelete] tries.
+  Exec('taskkill.exe', '/F /IM ScanHelper.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+
   // Word holds a lock on the add-in DLL while running, so installing over a live Word fails.
   if Exec('cmd.exe', '/C tasklist /FI "IMAGENAME eq WINWORD.EXE" | find /I "WINWORD.EXE"',
           '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0) then
