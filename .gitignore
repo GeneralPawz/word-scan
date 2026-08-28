@@ -4,3 +4,8 @@ helper/obj/
 
 # Node
 addin/node_modules/
+
+# Build outputs
+publish/
+dist/
+installer/input/

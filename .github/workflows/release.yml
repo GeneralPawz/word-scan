@@ -53,6 +53,19 @@ jobs:
           cp publish/ScanHelper.exe "dist/word-scan-helper-${{ steps.version.outputs.version }}-win-x64.exe"
           cp manifest.production.xml "dist/word-scan-manifest.xml"
 
+      - name: Build installer
+        shell: bash
+        run: |
+          mkdir -p installer/input
+          cp publish/ScanHelper.exe installer/input/ScanHelper.exe
+          cp manifest.production.xml installer/input/manifest.xml
+          ISCC="$(where.exe ISCC.exe 2>/dev/null | head -n1 || true)"
+          if [ -z "$ISCC" ]; then
+            choco install innosetup -y --no-progress
+            ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          fi
+          "$ISCC" installer/word-scan.iss "/DMyAppVersion=${{ steps.version.outputs.version }}"
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

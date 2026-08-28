@@ -17,29 +17,45 @@ Cursor gerade steht. Keine separate Scan-App, kein Zwischenspeichern, kein "Graf
 
 ## Installation 🚀
 
-Ihr braucht **zwei Dateien** von der [neuesten Version](https://github.com/GeneralPawz/word-scan/releases/latest):
+Ladet `word-scan-setup-<version>.exe` von der [neuesten Version](https://github.com/GeneralPawz/word-scan/releases/latest)
+herunter und führt es aus. Das Setup
 
-1. **Den Scan-Helfer** — `word-scan-helper-<version>-win-x64.exe`. Er spricht mit eurem Scanner.
-   Speichert ihn irgendwo ab (z. B. `Dokumente\WordScan\`) und startet ihn per Doppelklick, sobald
-   ihr scannen wollt; dabei bleibt ein Konsolenfenster geöffnet.
-2. **Das Add-in** — `word-scan-manifest.xml`. In Word: Reiter **Datei** → **Opionen (ganz unten)** → **Add-Ins** →
-   **Meine Add-Ins** → **Eigenes Add-In hochladen** → die heruntergeladene `word-scan-manifest.xml`
-   auswählen. Ab dann erscheint in jedem Dokument ein **Scan**-Button im Reiter **Start**.
+- installiert den Scan-Helfer (spricht mit eurem Scanner) unter `%LocalAppData%\Programs\WordScan`,
+- trägt das Add-in bei Word automatisch ein — kein Trust-Center, kein Zertifikat, kein
+  "Eigenes Add-In hochladen"-Dialog nötig,
+- legt eine Verknüpfung im Startmenü an, optional auch im Autostart.
+
+Danach nur noch **Word komplett schließen und neu öffnen** — im Reiter **Start** erscheint ein
+**Scan**-Button.
 
 > [!IMPORTANT]
-> Der Helfer muss laufen, damit der Scan-Button funktioniert. Passiert beim Klick nichts, prüft,
-> ob sein Konsolenfenster noch offen ist.
+> Der Helfer muss laufen, damit der Scan-Button funktioniert (das Setup startet ihn direkt; ohne
+> Autostart-Option müsst ihr ihn danach über die Startmenü-Verknüpfung erneut öffnen). Passiert
+> beim Klick nichts, prüft, ob sein Konsolenfenster noch offen ist.
 
 > [!WARNING]
-> Windows SmartScreen warnt eventuell vor der Helfer-`.exe`, weil sie nicht signiert ist (Code-
-> Signing kostet Geld, das dieses Hobbyprojekt nicht ausgibt). Klickt auf **Weitere Informationen
-> → Trotzdem ausführen**. Der Quellcode liegt vollständig offen in diesem Repository — oder baut
-> euch den Helfer einfach selbst, siehe [Selbst bauen](#selbst-bauen-️).
+> Windows SmartScreen warnt eventuell vor dem Setup bzw. der Helfer-`.exe`, weil beide nicht
+> signiert sind (Code-Signing kostet Geld, das dieses Hobbyprojekt nicht ausgibt). Klickt auf
+> **Weitere Informationen → Trotzdem ausführen**. Der Quellcode liegt vollständig offen in diesem
+> Repository — oder baut euch alles selbst, siehe [Selbst bauen](#selbst-bauen-️).
 
 > [!NOTE]
 > Euer Scanner muss bereits mit der in Windows eingebauten Scan-Funktion zusammenarbeiten (dieselbe,
 > die **Windows-Fax und -Scan** oder die Fotos-App nutzt). Sieht die euren Scanner nicht, sieht ihn
 > dieses Add-in auch nicht.
+
+<details>
+<summary>Manuelle Installation ohne Setup (fortgeschritten)</summary>
+
+Alternativ liegen `word-scan-helper-<version>-win-x64.exe` und `word-scan-manifest.xml` einzeln im
+selben Release. Startet die `.exe` manuell und tragt den Sideload-Registry-Schlüssel selbst ein
+(`HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\WEF\Developer`, Wertname
+`e667ed5b-c1c6-4f76-a374-a3a71521431d`, Wert = Pfad zur `word-scan-manifest.xml`) — genau das, was
+das Setup automatisch macht. Der Weg über Word selbst (Reiter **Datei** → **Optionen** (ganz unten)
+→ **Add-Ins** → unten im Dropdown **Meine Add-Ins** wählen → **Eigenes Add-In hochladen**) funktioniert
+nur mit einem Microsoft-365-Konto zuverlässig und meldet sonst gerne Schema- oder Zertifikatsfehler.
+
+</details>
 
 ## Benutzung 🖨️
 

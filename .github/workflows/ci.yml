@@ -27,3 +27,20 @@ jobs:
         working-directory: addin
       - run: npm run validate
         working-directory: addin
+
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile installer with placeholder inputs
+        shell: bash
+        run: |
+          mkdir -p installer/input
+          echo "placeholder" > installer/input/ScanHelper.exe
+          cp manifest.production.xml installer/input/manifest.xml
+          ISCC="$(where.exe ISCC.exe 2>/dev/null | head -n1 || true)"
+          if [ -z "$ISCC" ]; then
+            choco install innosetup -y --no-progress
+            ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          fi
+          "$ISCC" installer/word-scan.iss
